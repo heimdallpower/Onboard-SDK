@@ -377,11 +377,11 @@ LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 {
   static auto prev{std::chrono::system_clock::now()};
   const auto curr{std::chrono::system_clock::now()};
-
+  bool print{false};
   if ((curr - prev).count() * 1e-9 > 0.1)
   {
-    DSTATUS("LinuxSerialDevice::_serialRead called");
     prev = curr;
+    print = true;
   }
 
   if (NULL == buf)
@@ -392,6 +392,9 @@ LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 
 
   const ssize_t ret{read(m_serial_fd, buf, len)};
+  if (print)
+    DSTATUS("LinuxSerialDevice::_serialRead called. read returned %ld", ret);
+
   if (ret == -1)
   {
     DERROR("LinuxSerialDevice::_serialRead bad write");
