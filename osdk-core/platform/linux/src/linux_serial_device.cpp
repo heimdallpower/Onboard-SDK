@@ -33,7 +33,6 @@
 #include "linux_serial_device.hpp"
 #include <algorithm>
 #include <iterator>
-#include <chrono>
 #include <sys/statvfs.h>
 
 using namespace DJI::OSDK;
@@ -42,7 +41,6 @@ using namespace DJI::OSDK;
 
 LinuxSerialDevice::LinuxSerialDevice(const char* device, uint32_t baudrate)
 {
-  DSTATUS("Created DJI::OSDK::LinuxSerialDevice");
   m_device   = device;
   m_baudrate = baudrate;
 }
@@ -116,14 +114,12 @@ LinuxSerialDevice::setDevice(const char* device)
 int
 LinuxSerialDevice::setSerialPureTimedRead()
 {
-  DSTATUS("setSerialPureTimedRead");
   return _serialConfig(m_baudrate, 8, 'N', 1, true);
 }
 
 int
 LinuxSerialDevice::unsetSerialPureTimedRead()
 {
-  DSTATUS("unsetSerialPureTimedRead");
   return _serialConfig(m_baudrate, 8, 'N', 1, false);
 }
 

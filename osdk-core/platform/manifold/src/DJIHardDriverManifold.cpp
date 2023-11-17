@@ -36,7 +36,6 @@ using namespace DJI::onboardSDK;
 
 HardDriverManifold::HardDriverManifold(std::string device, uint32_t baudrate)
 {
-  DSTATUS("Created DJI::OSDK::HardDriver_Manifold");
   m_device   = device;
   m_baudrate = baudrate;
   m_memLock  = PTHREAD_MUTEX_INITIALIZER;

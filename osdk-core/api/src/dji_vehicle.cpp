@@ -454,10 +454,6 @@ Vehicle::initMainReadThread()
       DERROR("Failed to initialize UART serial read thread!\n");
       return false;
     }
-    else
-    {
-      DSTATUS("platformManager->addThread Ok");
-    }
   }
   else
   {
@@ -467,10 +463,10 @@ Vehicle::initMainReadThread()
 
 #if defined(STM32) || defined(__arm__) || defined(QT)
 #elif defined(linux)
-  DSTATUS("Set serial driver to nonblocking mode");
+  DDEBUG("Set serial driver to nonblocking mode");
   dynamic_cast<DJI::OSDK::LinuxSerialDevice *>(this->protocolLayer->getDriver())->setSerialPureTimedRead();
 #else
-  DSTATUS("Serial driver is not supported in this platform yet!");
+  DDEBUG("Serial driver is not supported in this platform yet!");
 #endif
   return UARTSerialReadThread->createThread();
 }

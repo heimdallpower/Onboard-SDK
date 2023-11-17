@@ -34,7 +34,6 @@ using namespace DJI::OSDK;
 
 PosixThread::PosixThread()
 {
-  DSTATUS("PosixThread::PosixThread");
   this->vehicle        = 0;
   this->type           = 0;
   this->stop_condition = false;
@@ -42,7 +41,6 @@ PosixThread::PosixThread()
 
 PosixThread::PosixThread(Vehicle* vehicle, int Type)
 {
-  DSTATUS("PosixThread::PosixThread w/ type = %d", type);
   this->vehicle        = vehicle;
   this->type           = Type;
   this->stop_condition = false;
@@ -96,7 +94,6 @@ PosixThread::createThread()
     DERROR("fail to set thread name for %s!\n", infoStr.c_str());
     return false;
   }
-  DSTATUS("PosixThread::createThread created thread %s", infoStr.c_str());
   return true;
 }
 
@@ -114,7 +111,7 @@ PosixThread::stopThread()
   }
   else
   {
-    DSTATUS("Succeeded to destroy thread\n");
+    DDEBUG("Succeeded to destroy thread\n");
   }
 
   ret = pthread_join(threadID, &status);
@@ -124,7 +121,7 @@ PosixThread::stopThread()
     DERROR("Join thread error: %d\n", ret);
     return ret;
   }
-  DSTATUS("Succeeded to join thread\n");
+
   return 0;
 }
 
