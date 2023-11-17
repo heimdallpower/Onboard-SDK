@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
+#include <sys/statvfs.h>
 
 using namespace DJI::OSDK;
 
@@ -390,6 +391,14 @@ LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
     return -1;
   }
 
+  const bool serial_ok1{fcntl(m_serial_fd, F_GETFD) != -1 || errno != EBADF};
+  if (!serial_ok1)
+    DSTATUS("LinuxSerialDevice::_serialRead !serial_ok1");
+
+  struct statvfs sb;
+  const bool serial_ok2{statvfs(m_device, &sb) == 0};
+  if (!serial_ok2)
+    DSTATUS("LinuxSerialDevice::_serialRead !serial_ok2");
 
   const ssize_t ret{read(m_serial_fd, buf, len)};
   if (print)
