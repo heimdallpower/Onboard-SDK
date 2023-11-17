@@ -33,6 +33,7 @@
 #include "linux_serial_device.hpp"
 #include <algorithm>
 #include <iterator>
+#include <chrono>
 
 using namespace DJI::OSDK;
 
@@ -89,7 +90,6 @@ LinuxSerialDevice::send(const uint8_t* buf, size_t len)
 size_t
 LinuxSerialDevice::readall(uint8_t* buf, size_t maxlen)
 {
-  DSTATUS("readall %d", maxlen);
   return _serialRead(buf, maxlen);
 }
 
@@ -375,12 +375,26 @@ LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 int
 LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 {
+  static auto prev{std::chrono::system_clock::now()};
+  const auto curr{std::chrono::system_clock::now()};
+
+  if ((curr - prev).count() * 1e-9 > 0.1)
+  {
+    DSTATUS("LinuxSerialDevice::_serialRead called");
+    prev = curr;
+  }
+
   if (NULL == buf)
+  {
+    DERROR("LinuxSerialDevice::_serialRead invalid buffer");
     return -1;
+  }
+
 
   const ssize_t ret{read(m_serial_fd, buf, len)};
   if (ret == -1)
   {
+    DERROR("LinuxSerialDevice::_serialRead bad write");
     _serialClose();
     switch (errno)
     {
