@@ -342,30 +342,12 @@ LinuxSerialDevice::_serialStart(const char* dev_name, int baud_rate)
 int
 LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 {
-  const ssize_t ret{write(m_serial_fd, buf, len)};
-  if (ret == -1)
-  {
-    _serialClose();
-    switch (errno)
-    {
-      case EAGAIN: DERROR("EAGAIN/EWOULDBLOCK"); break;
-      case EBADF: DERROR("EBADF"); break;
-      case EDESTADDRREQ: DERROR("EDESTADDRREQ"); break;
-      case EDQUOT: DERROR("EDQUOT"); break;
-      case EFAULT: DERROR("EFAULT"); break;
-      case EFBIG: DERROR("EFBIG"); break;
-      case EINTR: DERROR("EINTR"); break;
-      case EINVAL: DERROR("EINVAL"); break;
-      case EIO: DERROR("EIO"); break;
-      case ENOSPC: DERROR("ENOSPC"); break;
-      case EPERM: DERROR("EPERM"); break;
-      case EPIPE: DERROR("EPIPE"); break;
-      default: DERROR("write failed but not error reported"); break;
-    }
-    if (_serialStart(m_device, m_baudrate) >= 0)
-      return write(m_serial_fd, buf, len);
-  }
-  return ret;
+  struct statvfs sb;
+  const bool serial_ok{statvfs(m_device, &sb) == 0};
+  const ssize_t num_written{write(m_serial_fd, buf, len)};
+  if (!serial_ok || num_written < 0)
+    DERROR("LinuxSerialDevice::_serialWrite serial port not ok");
+  return num_written;
 }
 
 //! Current _serialRead behavior: Wait for 500 ms between characters till 18
@@ -376,51 +358,18 @@ LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 int
 LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 {
-  static auto prev{std::chrono::system_clock::now()};
-  const auto curr{std::chrono::system_clock::now()};
-  bool print{false};
-  if ((curr - prev).count() * 1e-9 > 0.1)
-  {
-    prev = curr;
-    print = true;
-  }
-
   if (NULL == buf)
-  {
-    DERROR("LinuxSerialDevice::_serialRead invalid buffer");
     return -1;
-  }
-
-  const bool serial_ok1{fcntl(m_serial_fd, F_GETFD) != -1 || errno != EBADF};
-  if (!serial_ok1)
-    DSTATUS("LinuxSerialDevice::_serialRead !serial_ok1");
 
   struct statvfs sb;
-  const bool serial_ok2{statvfs(m_device, &sb) == 0};
-  if (!serial_ok2)
-    DSTATUS("LinuxSerialDevice::_serialRead !serial_ok2");
-
-  const ssize_t ret{read(m_serial_fd, buf, len)};
-  if (print)
-    DSTATUS("LinuxSerialDevice::_serialRead called. read returned %ld", ret);
-
-  if (ret == -1)
+  const bool serial_ok{statvfs(m_device, &sb) == 0};
+  const ssize_t num_read{read(m_serial_fd, buf, len)};
+  if (!serial_ok || num_read < 0)
   {
-    DERROR("LinuxSerialDevice::_serialRead bad write");
+    DERROR("LinuxSerialDevice::_serialRead serial port not ok");
     _serialClose();
-    switch (errno)
-    {
-      case EAGAIN: DERROR("EAGAIN/EWOULDBLOCK"); break;
-      case EBADF: DERROR("EBADF"); break;
-      case EFAULT: DERROR("EFAULT"); break;
-      case EINTR: DERROR("EINTR"); break;
-      case EINVAL: DERROR("EINVAL"); break;
-      case EIO: DERROR("EIO"); break;
-      case EISDIR: DERROR("EISDIR"); break;
-      default: DERROR("read failed but not error reported"); break;
-    }
     if (_serialStart(m_device, m_baudrate) >= 0)
       return read(m_serial_fd, buf, len);
   }
-  return ret;
+  return num_read;
 }
