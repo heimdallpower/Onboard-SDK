@@ -33,6 +33,7 @@ using namespace DJI::OSDK;
 
 OSDKThread::OSDKThread(DJI::OSDK::Vehicle* vehicle, int Type, QObject* parent)
 {
+  DSTATUS("OSDKThread::OSDKThread w/ type = %d", type);
   this->vehicle = vehicle;
   type          = Type;
   callTimes     = 0;

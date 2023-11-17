@@ -42,6 +42,7 @@ Thread*
 PlatformManager::addThread(Vehicle* vehicle_ptr, uint8_t thread_type)
 {
 #ifdef QT
+  DSTATUS("addThread QT");
   if (thread_type == UART_SERIAL_READ_THREAD)
   {
     OSDKThread* readThreadPtr =
@@ -87,9 +88,11 @@ PlatformManager::addThread(Vehicle* vehicle_ptr, uint8_t thread_type)
 
   return NULL;
 #elif STM32
+  DSTATUS("addThread STM32");
   //! Threads not supported by default
   return NULL;
 #elif defined(__linux__)
+  DSTATUS("addThread __linux__");
   if (thread_type == CALLBACK_THREAD)
   {
     Thread* callbackThread =
