@@ -180,6 +180,7 @@ LinuxSerialDevice::_serialOpen(const char* dev)
     DERROR("cannot open device %s\n", dev);
     return false;
   }
+  DSTATUS("opened device %s", dev);
   return true;
 }
 
