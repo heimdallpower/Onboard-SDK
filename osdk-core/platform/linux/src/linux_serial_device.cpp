@@ -89,6 +89,7 @@ LinuxSerialDevice::send(const uint8_t* buf, size_t len)
 size_t
 LinuxSerialDevice::readall(uint8_t* buf, size_t maxlen)
 {
+  DSTATUS("readall %d", maxlen);
   return _serialRead(buf, maxlen);
 }
 
