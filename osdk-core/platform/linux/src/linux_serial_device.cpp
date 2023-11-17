@@ -337,7 +337,30 @@ LinuxSerialDevice::_serialStart(const char* dev_name, int baud_rate)
 int
 LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 {
-  return write(m_serial_fd, buf, len);
+  const ssize_t ret{write(m_serial_fd, buf, len)};
+  if (ret == -1)
+  {
+    _serialClose();
+    switch (errno)
+    {
+      case EAGAIN: DERROR("EAGAIN/EWOULDBLOCK"); break;
+      case EBADF: DERROR("EBADF"); break;
+      case EDESTADDRREQ: DERROR("EDESTADDRREQ"); break;
+      case EDQUOT: DERROR("EDQUOT"); break;
+      case EFAULT: DERROR("EFAULT"); break;
+      case EFBIG: DERROR("EFBIG"); break;
+      case EINTR: DERROR("EINTR"); break;
+      case EINVAL: DERROR("EINVAL"); break;
+      case EIO: DERROR("EIO"); break;
+      case ENOSPC: DERROR("ENOSPC"); break;
+      case EPERM: DERROR("EPERM"); break;
+      case EPIPE: DERROR("EPIPE"); break;
+      default: DERROR("write failed but not error reported"); break;
+    }
+    if (_serialStart(m_device, m_baudrate) >= 0)
+      return write(m_serial_fd, buf, len);
+  }
+  return ret;
 }
 
 //! Current _serialRead behavior: Wait for 500 ms between characters till 18
@@ -348,15 +371,26 @@ LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 int
 LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 {
-  int ret = -1;
-
   if (NULL == buf)
-  {
     return -1;
-  }
-  else
+
+  const ssize_t ret{read(m_serial_fd, buf, len)};
+  if (ret == -1)
   {
-    ret = read(m_serial_fd, buf, len);
-    return ret;
+    _serialClose();
+    switch (errno)
+    {
+      case EAGAIN: DERROR("EAGAIN/EWOULDBLOCK"); break;
+      case EBADF: DERROR("EBADF"); break;
+      case EFAULT: DERROR("EFAULT"); break;
+      case EINTR: DERROR("EINTR"); break;
+      case EINVAL: DERROR("EINVAL"); break;
+      case EIO: DERROR("EIO"); break;
+      case EISDIR: DERROR("EISDIR"); break;
+      default: DERROR("read failed but not error reported"); break;
+    }
+    if (_serialStart(m_device, m_baudrate) >= 0)
+      return read(m_serial_fd, buf, len);
   }
+  return ret;
 }
