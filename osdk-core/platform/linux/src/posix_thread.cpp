@@ -118,7 +118,7 @@ PosixThread::stopThread()
 
   if (ret)
   {
-    DDEBUG("Join thread error: %d\n", ret);
+    DERROR("Join thread error: %d\n", ret);
     return ret;
   }
 

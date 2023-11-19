@@ -33,6 +33,7 @@
 #include "linux_serial_device.hpp"
 #include <algorithm>
 #include <iterator>
+#include <sys/statvfs.h>
 
 using namespace DJI::OSDK;
 
@@ -175,6 +176,7 @@ LinuxSerialDevice::_serialOpen(const char* dev)
     DERROR("cannot open device %s\n", dev);
     return false;
   }
+  DSTATUS("opened device %s", dev);
   return true;
 }
 
@@ -337,7 +339,12 @@ LinuxSerialDevice::_serialStart(const char* dev_name, int baud_rate)
 int
 LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 {
-  return write(m_serial_fd, buf, len);
+  struct statvfs sb;
+  const bool serial_ok{statvfs(m_device, &sb) == 0};
+  const ssize_t num_written{write(m_serial_fd, buf, len)};
+  if (!serial_ok || num_written < 0)
+    DERROR("LinuxSerialDevice::_serialWrite serial port not ok");
+  return num_written;
 }
 
 //! Current _serialRead behavior: Wait for 500 ms between characters till 18
@@ -348,15 +355,18 @@ LinuxSerialDevice::_serialWrite(const uint8_t* buf, int len)
 int
 LinuxSerialDevice::_serialRead(uint8_t* buf, int len)
 {
-  int ret = -1;
-
   if (NULL == buf)
-  {
     return -1;
-  }
-  else
+
+  struct statvfs sb;
+  const bool serial_ok{statvfs(m_device, &sb) == 0};
+  const ssize_t num_read{read(m_serial_fd, buf, len)};
+  if (!serial_ok || num_read < 0)
   {
-    ret = read(m_serial_fd, buf, len);
-    return ret;
+    DERROR("LinuxSerialDevice::_serialRead serial port not ok");
+    _serialClose();
+    if (_serialStart(m_device, m_baudrate) >= 0)
+      return read(m_serial_fd, buf, len);
   }
+  return num_read;
 }
